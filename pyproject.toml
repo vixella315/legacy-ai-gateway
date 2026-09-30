@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "legacy-ai-gateway"
+version = "0.1.0"
+description = "A gateway architecture for constrained devices interfacing with modern AI."
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
