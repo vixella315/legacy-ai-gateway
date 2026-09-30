@@ -1,4 +1,23 @@
-"""Protocol package placeholder.
+"""Public exports for protocol data objects."""
 
-Protocol data objects and validation are planned for Step 12.2 and 12.3.
-"""
+from .messages import (
+    AuthMessage,
+    ErrorMessage,
+    HelloMessage,
+    MessageType,
+    ProtocolEnvelope,
+    RequestMessage,
+    RequestStatus,
+    ResponseMessage,
+)
+
+__all__ = [
+    "AuthMessage",
+    "ErrorMessage",
+    "HelloMessage",
+    "MessageType",
+    "ProtocolEnvelope",
+    "RequestMessage",
+    "RequestStatus",
+    "ResponseMessage",
+]
