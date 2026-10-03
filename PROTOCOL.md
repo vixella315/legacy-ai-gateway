@@ -2,7 +2,7 @@
 
 ## Status
 
-Protocol design document only. It is not yet implemented or verified.
+Protocol design plus Prototype 1 implementation. The initial data-object and validation layers, request lifecycle, and response chunking have automated test coverage. Wire encoding and transport remain unimplemented.
 
 ## Design goals
 
