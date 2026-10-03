@@ -173,6 +173,27 @@ class GatewayCoreTests(unittest.TestCase):
             RequestLifecycle.FAILURE,
         )
 
+
+
+    def test_unexpected_provider_exception_becomes_failure(self) -> None:
+        class UnexpectedProvider:
+            def identity(self):
+                return MockProvider().identity()
+
+            def execute(self, request):
+                raise RuntimeError("internal detail")
+
+        gateway = Gateway(UnexpectedProvider())
+        response = gateway.handle_request(make_request())
+
+        self.assertEqual(response.status, RequestStatus.FAILURE)
+        self.assertEqual(response.error["code"], "PROVIDER_INTERNAL_ERROR")
+        self.assertEqual(response.error["message"], "provider execution failed unexpectedly")
+        self.assertEqual(
+            gateway.request_tracker.require("R-12-5").state,
+            RequestLifecycle.FAILURE,
+        )
+
     def test_gateway_does_not_retry_provider_error(self) -> None:
         provider = MockProvider(MockMode.FAILURE)
         gateway = Gateway(provider)
