@@ -1,0 +1,73 @@
+name: reference-aikon-build
+on:
+  push:
+    branches: [main, "reference/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upstream-server:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: emir/AIKON
+          ref: 224516b3e6e7e1d2666abf95965102d9b5de1444
+          path: upstream/aikon
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: upstream/aikon/server/go.sum
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: make -C upstream/aikon/server test
+      - run: docker build -t aikon-server:reference upstream/aikon/server
+
+  upstream-app:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: emir/AIKON
+          ref: 224516b3e6e7e1d2666abf95965102d9b5de1444
+          path: upstream/aikon
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - run: make -C upstream/aikon/app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aikon-reference-build
+          path: upstream/aikon/app/dist/
+
+  upstream-full:
+    runs-on: ubuntu-24.04
+    needs: [upstream-server, upstream-app]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: emir/AIKON
+          ref: 224516b3e6e7e1d2666abf95965102d9b5de1444
+          path: upstream/aikon
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: upstream/aikon/server/go.sum
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: pip install pillow
+      - run: make -C upstream/aikon
