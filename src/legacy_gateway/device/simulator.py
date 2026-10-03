@@ -1,8 +1,8 @@
 """Deterministic constrained-device simulator for Prototype 1.
 
 The simulator models only the device-side responsibilities: capabilities,
-request creation, response reception, and a small bounded local history.
-It does not perform AI inference or network transport.
+request creation, response reception, response chunk assembly, and a small
+bounded local history. It does not perform AI inference or network transport.
 """
 
 from __future__ import annotations
@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from legacy_gateway.protocol.assembler import ChunkAssembler
+from legacy_gateway.protocol.chunks import ResponseChunk
 from legacy_gateway.protocol.messages import RequestMessage, ResponseMessage
 from legacy_gateway.protocol.validation import validate_request, validate_response
 
@@ -21,6 +23,7 @@ class DeviceProfile:
     device_id: str
     max_request_chars: int = 4096
     max_response_chars: int = 8192
+    response_chunk_size: int = 1024
     capabilities: tuple[str, ...] = ("chat",)
 
 
@@ -33,6 +36,9 @@ class SimulatedDevice:
     _request_sequence: int = 0
     last_response: ResponseMessage | None = None
     response_history: list[ResponseMessage] = field(default_factory=list)
+    _chunk_assembler: ChunkAssembler = field(
+        default_factory=ChunkAssembler, init=False, repr=False
+    )
 
     def hello(self) -> dict[str, Any]:
         """Return the device capability description."""
@@ -64,9 +70,20 @@ class SimulatedDevice:
         validate_request(request)
         return request
 
+    def receive_response_chunk(self, chunk: ResponseChunk) -> ResponseMessage | None:
+        """Accept one response chunk and store the response when complete."""
+        if self.profile.response_chunk_size < 1:
+            raise ValueError("simulated device chunk size must be positive")
+        response = self._chunk_assembler.add(chunk)
+        if response is not None:
+            self.receive_response(response)
+        return response
+
     def receive_response(self, response: ResponseMessage) -> None:
-        """Validate and store a gateway response within device limits."""
+        """Validate and store a complete gateway response within device limits."""
         validate_response(response)
+        if self.profile.max_response_chars < 0:
+            raise ValueError("simulated device response limit must be non-negative")
         if len(response.content) > self.profile.max_response_chars:
             raise ValueError("response exceeds simulated device limit")
         self.last_response = response
