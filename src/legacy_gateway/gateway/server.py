@@ -82,13 +82,14 @@ class Gateway:
                 response = self._error_response(
                     request, RequestStatus.FAILURE, "PROVIDER_PROTOCOL_ERROR", str(exc)
                 )
-            elif response.request_id != request.request_id:
-                response = self._error_response(
-                    request,
-                    RequestStatus.FAILURE,
-                    "REQUEST_ID_MISMATCH",
-                    "provider response request_id does not match request",
-                )
+            else:
+                if response.request_id != request.request_id:
+                    response = self._error_response(
+                        request,
+                        RequestStatus.FAILURE,
+                        "REQUEST_ID_MISMATCH",
+                        "provider response request_id does not match request",
+                    )
 
         self._record_terminal_state(request.request_id, response.status)
         return response
