@@ -3,6 +3,7 @@
 import unittest
 
 from legacy_gateway.device import DeviceProfile, SimulatedDevice
+from legacy_gateway.gateway import Gateway
 from legacy_gateway.gateway.e2e import EndToEndHarness
 from legacy_gateway.protocol.messages import RequestMessage, RequestStatus, ResponseMessage
 from legacy_gateway.providers import MockMode, MockProvider
@@ -95,9 +96,7 @@ class EndToEndTests(unittest.TestCase):
             )
         )
         provider = LongResponseProvider(content)
-        harness = EndToEndHarness(device=device, gateway=__import__(
-            "legacy_gateway.gateway", fromlist=["Gateway"]
-        ).Gateway(provider))
+        harness = EndToEndHarness(device=device, gateway=Gateway(provider))
 
         response = harness.send_chat("chunk me")
 
