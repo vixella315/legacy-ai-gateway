@@ -6,6 +6,10 @@ before transport is introduced.
 
 Step 12.9 adds delivery-failure simulation. Recovery re-delivers an already
 produced response; it does not re-execute the provider operation.
+
+Step 12.10 integrates response chunking at the simulated-device delivery
+boundary. Chunking is transport behavior: the device still enforces its
+complete-response storage limit after reassembly.
 """
 
 from __future__ import annotations
@@ -14,7 +18,12 @@ from dataclasses import dataclass
 
 from legacy_gateway.device import SimulatedDevice
 from legacy_gateway.gateway import Gateway
-from legacy_gateway.protocol.messages import RequestMessage, ResponseMessage
+from legacy_gateway.protocol.chunks import chunk_response
+from legacy_gateway.protocol.messages import (
+    RequestMessage,
+    RequestStatus,
+    ResponseMessage,
+)
 from legacy_gateway.providers import MockProvider
 
 
@@ -41,7 +50,16 @@ class EndToEndHarness:
         return self.gateway.handle_request(request)
 
     def deliver(self, response: ResponseMessage) -> None:
-        """Deliver an already-created response to the device."""
+        """Deliver an already-created response, chunking large success content."""
+        if (
+            response.status is RequestStatus.SUCCESS
+            and len(response.content) > self.device.profile.response_chunk_size
+        ):
+            for chunk in chunk_response(
+                response, self.device.profile.response_chunk_size
+            ):
+                self.device.receive_response_chunk(chunk)
+            return
         self.device.receive_response(response)
 
     def send_chat(self, content: str) -> ResponseMessage:
