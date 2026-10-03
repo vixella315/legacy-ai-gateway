@@ -30,9 +30,11 @@ No paid AI provider, Nokia hardware, J2ME runtime, legacy TLS configuration, or 
 
 Step 12 — Prototype Implementation
 
-Current substep: 12.1 — Repository Skeleton
+**Current status: qualification hardening.**
 
-The skeleton contains project structure and design documents only. Functionality is not yet implemented.
+The core mock end-to-end path, request lifecycle integration, automated test runner, CI, failure/recovery simulation, and response chunking integration have been implemented and exercised by CI.
+
+Prototype 1 is **not yet fully qualified**. Current hardening work focuses on response-chunk metadata preservation and duplicate-delivery behavior. Physical hardware, real networking, local AI, commercial providers, and production security remain later stages.
 
 ## Project rules
 
