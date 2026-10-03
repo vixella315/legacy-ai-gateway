@@ -67,6 +67,15 @@ class Gateway:
             response = self._error_response(
                 request, RequestStatus.FAILURE, "PROVIDER_ERROR", str(exc)
             )
+        except Exception as exc:
+            # Keep the logical request out of RUNNING if an adapter violates its
+            # declared exception contract. Do not retry or expose internals.
+            response = self._error_response(
+                request,
+                RequestStatus.FAILURE,
+                "PROVIDER_INTERNAL_ERROR",
+                "provider execution failed unexpectedly",
+            )
 
         if not isinstance(response, ResponseMessage):
             response = self._error_response(
